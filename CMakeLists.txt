@@ -11,30 +11,24 @@ else()
     project( MAGMA C CXX )
 endif()
 
-
-# ----------------------------------------
-# to show compile commands, set this here or use 'make VERBOSE=1'
-#set(CMAKE_VERBOSE_MAKEFILE on)
-
 # ----------------------------------------
 # MAGMA requires one backend to be enabled
-option(MAGMA_ENABLE_CUDA     "Enable the CUDA backend"  OFF)
-option(MAGMA_ENABLE_HIP      "Enable the HIP  backend"  OFF)
+option( MAGMA_ENABLE_CUDA     "Enable the CUDA backend"  OFF )
+option( MAGMA_ENABLE_HIP      "Enable the HIP  backend"  OFF )
 
 # check if one backend has been enabled
-if (NOT MAGMA_ENABLE_CUDA AND
-    NOT MAGMA_ENABLE_HIP
-    )
-  message(STATUS "MAGMA requires one enabled backend!")
-  message(STATUS "Building CUDA backend")
-  set( MAGMA_ENABLE_CUDA ON )
+if (NOT MAGMA_ENABLE_CUDA
+    AND NOT MAGMA_ENABLE_HIP)
+    message( STATUS "MAGMA requires one enabled backend!" )
+    message( STATUS "Building CUDA backend" )
+    set( MAGMA_ENABLE_CUDA ON )
 endif()
 
 # ----------------------------------------
 # don't regenerate files during make.
 # (I think this means you have to manually re-run CMake if CMakeLists changes.
 # It fixes the huge problems with CMake interrupting Visual Studio.)
-set(CMAKE_SUPPRESS_REGENERATION on)
+set( CMAKE_SUPPRESS_REGENERATION on )
 
 
 # ----------------------------------------
@@ -57,30 +51,30 @@ option( BUILD_SHARED_LIBS "If on, build shared libraries, otherwise build static
 
 # prefer /usr/local/magma, instead of /usr/local.
 if (UNIX AND CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "/usr/local/magma" CACHE PATH "..." FORCE)
+    set( CMAKE_INSTALL_PREFIX "/usr/local/magma" CACHE PATH "..." FORCE )
 endif()
 
 # ----------------------------------------
 # use C++14 and C99
 # see http://stackoverflow.com/questions/10851247/how-to-activate-c-11-in-cmake
-include(CheckCXXCompilerFlag)
-include(CheckCCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-CHECK_CXX_COMPILER_FLAG("-fPIC" COMPILER_SUPPORTS_FPIC)
+include( CheckCXXCompilerFlag )
+include( CheckCCompilerFlag )
+CHECK_CXX_COMPILER_FLAG( "-std=c++14" COMPILER_SUPPORTS_CXX14 )
+CHECK_CXX_COMPILER_FLAG( "-std=c++0x" COMPILER_SUPPORTS_CXX0X )
+CHECK_CXX_COMPILER_FLAG( "-fPIC" COMPILER_SUPPORTS_FPIC )
 if (COMPILER_SUPPORTS_CXX14)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14" )
+elseif (COMPILER_SUPPORTS_CXX0X)
+    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x" )
 else()
-    message( WARNING "The compiler ${CMAKE_CXX_COMPILER} doesn't support the -std=c++14 flag. Some code may not compile.")
+    message( WARNING "The compiler ${CMAKE_CXX_COMPILER} doesn't support the -std=c++14 flag. Some code may not compile." )
 endif()
 
-CHECK_C_COMPILER_FLAG("-std=c99" COMPILER_SUPPORTS_C99)
+CHECK_C_COMPILER_FLAG( "-std=c99" COMPILER_SUPPORTS_C99 )
 if (COMPILER_SUPPORTS_C99)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+    set( CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99" )
 else()
-    message( WARNING "The compiler ${CMAKE_C_COMPILER} doesn't support the -std=c99 flag. Some code may not compile.")
+    message( WARNING "The compiler ${CMAKE_C_COMPILER} doesn't support the -std=c99 flag. Some code may not compile." )
 endif()
 
 
@@ -88,11 +82,13 @@ endif()
 # check Fortran name mangling
 if (USE_FORTRAN)
     include( FortranCInterface )
-    FortranCInterface_HEADER( ${CMAKE_SOURCE_DIR}/include/magma_mangling_cmake.h MACRO_NAMESPACE MAGMA_ )
+    FortranCInterface_HEADER( ${CMAKE_SOURCE_DIR}/include/magma_mangling_cmake.h
+                              MACRO_NAMESPACE MAGMA_ )
 else()
     # set one of -DADD_, -DUPCASE, or -DNOCHANGE. See README.
     message( STATUS "Building without Fortran compiler" )
-    set( FORTRAN_CONVENTION "-DADD_" CACHE STRING "Fortran calling convention, one of -DADD_, -DNOCHANGE, -DUPCASE" )
+    set( FORTRAN_CONVENTION "-DADD_" CACHE STRING
+         "Fortran calling convention, one of -DADD_, -DNOCHANGE, -DUPCASE" )
     set_property( CACHE FORTRAN_CONVENTION PROPERTY STRINGS -DADD_ -DNOCHANGE -DUPCASE )
     message( STATUS "    Using ${FORTRAN_CONVENTION} for Fortran calling convention" )
     set( CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   ${FORTRAN_CONVENTION}" )
@@ -226,98 +222,102 @@ endif()
 # ----------------------------------------
 # locate HIP/ROCm libraries
 if (MAGMA_ENABLE_HIP)
-  set( GPU_TARGET "gfx900" CACHE STRING "HIP architectures to compile for" )
-  list(APPEND CMAKE_PREFIX_PATH /opt/rocm /opt/rocm/lib/cmake/hip)
-  find_package( HIP )
-  if (HIP_FOUND)
-    message( STATUS "Found HIP ${HIP_VERSION}" )
-    message( STATUS "    HIP_INCLUDE_DIRS:   ${HIP_INCLUDE_DIRS}"   )
-    message( STATUS "GPU_TARGET:  ${GPU_TARGET}"   )
+    set( GPU_TARGET "gfx900" CACHE STRING "HIP architectures to compile for" )
+    list( APPEND CMAKE_PREFIX_PATH /opt/rocm /opt/rocm/lib/cmake/hip )
+    find_package( HIP )
+    if (HIP_FOUND)
+        message( STATUS "Found HIP ${HIP_VERSION}" )
+        message( STATUS "    HIP_INCLUDE_DIRS:   ${HIP_INCLUDE_DIRS}"   )
+        message( STATUS "GPU_TARGET:  ${GPU_TARGET}"   )
 
-    include_directories( ${HIP_INCLUDE_DIRS} )
+        include_directories( ${HIP_INCLUDE_DIRS} )
 
-    set(HIP_SEPARABLE_COMPILATION ON)
+        set( HIP_SEPARABLE_COMPILATION ON )
 
-    if (GPU_TARGET MATCHES kaveri)
-      set( GPU_TARGET ${GPU_TARGET} gfx700 )
+        if (GPU_TARGET MATCHES kaveri)
+            set( GPU_TARGET ${GPU_TARGET} gfx700 )
+        endif()
+
+        if (GPU_TARGET MATCHES hawaii)
+            set( GPU_TARGET ${GPU_TARGET} gfx701 )
+        endif()
+
+        if (GPU_TARGET MATCHES kabini)
+            set( GPU_TARGET ${GPU_TARGET} gfx703 )
+        endif()
+
+        if (GPU_TARGET MATCHES mullins)
+            set( GPU_TARGET ${GPU_TARGET} gfx703 )
+        endif()
+
+        if (GPU_TARGET MATCHES bonaire)
+            set( GPU_TARGET ${GPU_TARGET} gfx704 )
+        endif()
+
+        if (GPU_TARGET MATCHES carrizo)
+            set( GPU_TARGET ${GPU_TARGET} gfx801 )
+        endif()
+
+        if (GPU_TARGET MATCHES iceland)
+            set( GPU_TARGET ${GPU_TARGET} gfx802 )
+        endif()
+
+        if (GPU_TARGET MATCHES tonga)
+            set( GPU_TARGET ${GPU_TARGET} gfx802 )
+        endif()
+
+        if (GPU_TARGET MATCHES fiji)
+            set( GPU_TARGET ${GPU_TARGET} gfx803 )
+        endif()
+
+        if (GPU_TARGET MATCHES polaris10)
+            set( GPU_TARGET ${GPU_TARGET} gfx803 )
+        endif()
+
+        if (GPU_TARGET MATCHES tongapro)
+            set( GPU_TARGET ${GPU_TARGET} gfx805 )
+        endif()
+
+        if (GPU_TARGET MATCHES stoney)
+            set( GPU_TARGET ${GPU_TARGET} gfx810 )
+        endif()
+
+        set( DEVCCFLAGS  "" )
+        set( VALID_GFXS "700;701;702;703;704;705;801;802;803;805;810;900;902;904;906;908;909;90c;1010;1011;1012;1030;1031;1032;1033" )
+        foreach( GFX ${VALID_GFXS} )
+            if (GPU_TARGET MATCHES gfx${GFX})
+                set( DEVCCFLAGS ${DEVCCFLAGS} --offload-arch=gfx${GFX} )
+            endif()
+        endforeach()
+
+        set( DEVCCFLAGS ${DEVCCFLAGS} -fPIC ${FORTRAN_CONVENTION} )
+        set( MAGMA_HAVE_HIP "1" )
+        message( STATUS "Define -DMAGMA_HAVE_HIP" )
+
+        set_property( TARGET hip::device APPEND PROPERTY
+                      COMPATIBLE_INTERFACE_BOOL INTERFACE_HIP_DEVICE_COMPILE )
+        set_property( TARGET hip::device PROPERTY INTERFACE_HIP_DEVICE_COMPILE ON )
+        set( GPU_ARCH_FLAGS ${DEVCCFLAGS} )
+
+        #add_compile_options( ${GPU_ARCH_FLAGS} )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HIP_PLATFORM_AMD__" )
+        option( ROCM_CORE "Location of the rocm-core package" )
+        execute_process(
+            COMMAND "${CMAKE_SOURCE_DIR}/tools/get-rocm-version.sh" "${ROCM_CORE}"
+            OUTPUT_VARIABLE ROCM_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE )
+        message( STATUS "ROCM_VERSION=${ROCM_VERSION}" )
+        set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROCM_VERSION=${ROCM_VERSION}" )
+    else()
+        message( STATUS "Could not find HIP" )
     endif()
-
-    if (GPU_TARGET MATCHES hawaii)
-      set( GPU_TARGET ${GPU_TARGET} gfx701 )
-    endif()
-
-    if (GPU_TARGET MATCHES kabini)
-      set( GPU_TARGET ${GPU_TARGET} gfx703 )
-    endif()
-
-    if (GPU_TARGET MATCHES mullins)
-      set( GPU_TARGET ${GPU_TARGET} gfx703 )
-    endif()
-
-    if (GPU_TARGET MATCHES bonaire)
-      set( GPU_TARGET ${GPU_TARGET} gfx704 )
-    endif()
-
-    if (GPU_TARGET MATCHES carrizo)
-      set( GPU_TARGET ${GPU_TARGET} gfx801 )
-    endif()
-
-    if (GPU_TARGET MATCHES iceland)
-      set( GPU_TARGET ${GPU_TARGET} gfx802 )
-    endif()
-
-    if (GPU_TARGET MATCHES tonga)
-      set( GPU_TARGET ${GPU_TARGET} gfx802 )
-    endif()
-
-    if (GPU_TARGET MATCHES fiji)
-      set( GPU_TARGET ${GPU_TARGET} gfx803 )
-    endif()
-
-    if (GPU_TARGET MATCHES polaris10)
-      set( GPU_TARGET ${GPU_TARGET} gfx803 )
-    endif()
-
-    if (GPU_TARGET MATCHES tongapro)
-      set( GPU_TARGET ${GPU_TARGET} gfx805 )
-    endif()
-
-    if (GPU_TARGET MATCHES stoney)
-      set( GPU_TARGET ${GPU_TARGET} gfx810 )
-    endif()
-
-    set( DEVCCFLAGS  "" )
-    set(VALID_GFXS "700;701;702;703;704;705;801;802;803;805;810;900;902;904;906;908;909;90c;1010;1011;1012;1030;1031;1032;1033")
-    foreach( GFX ${VALID_GFXS} )
-      if ( GPU_TARGET MATCHES gfx${GFX} )
-        set( DEVCCFLAGS ${DEVCCFLAGS} --offload-arch=gfx${GFX} )
-      endif()
-    endforeach()
-
-    set( DEVCCFLAGS ${DEVCCFLAGS} -fPIC ${FORTRAN_CONVENTION} )
-    set(MAGMA_HAVE_HIP "1")
-    message( STATUS "Define -DMAGMA_HAVE_HIP" )
-
-    set_property(TARGET hip::device APPEND PROPERTY COMPATIBLE_INTERFACE_BOOL INTERFACE_HIP_DEVICE_COMPILE)
-    set_property(TARGET hip::device PROPERTY INTERFACE_HIP_DEVICE_COMPILE ON)
-    set(GPU_ARCH_FLAGS ${DEVCCFLAGS})
-
-    #add_compile_options(${GPU_ARCH_FLAGS})
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HIP_PLATFORM_AMD__" )
-    option(ROCM_CORE "Location of the rocm-core package")
-    execute_process(COMMAND "${CMAKE_SOURCE_DIR}/tools/get-rocm-version.sh" "${ROCM_CORE}" OUTPUT_VARIABLE ROCM_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message(STATUS "ROCM_VERSION=${ROCM_VERSION}")
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DROCM_VERSION=${ROCM_VERSION}" )
-  else()
-    message( STATUS "Could not find HIP" )
-  endif()
 endif()
 
 # ----------------------------------------
 # locate LAPACK libraries
 
-set(BLA_VENDOR "" CACHE STRING
-    "Use specified BLAS library. See https://cmake.org/cmake/help/latest/module/FindBLAS.html")
+set( BLA_VENDOR "" CACHE STRING
+     "Use specified BLAS library. See https://cmake.org/cmake/help/latest/module/FindBLAS.html" )
 
 # List from CMake 3.17, minus some obsolete ones:
 # PhiPACK, Compaq CXML, DEC Alpha DXML, SunPerf, SGI SCSL, SGIMATH,
@@ -331,12 +331,14 @@ set_property(CACHE BLA_VENDOR PROPERTY STRINGS
     "Arm" "Arm_mp" "Arm_ilp64" "Arm_ilp64_mp"
     "Generic")
 
-set( LAPACK_LIBRARIES "" CACHE STRING "Libraries for LAPACK and BLAS, to manually override search" )
+set( LAPACK_LIBRARIES "" CACHE STRING
+     "Libraries for LAPACK and BLAS, to manually override search" )
 if (LAPACK_LIBRARIES STREQUAL "")
     message( STATUS "Searching for BLAS and LAPACK. To override, set LAPACK_LIBRARIES using ccmake." )
     find_package( LAPACK )
     # force showing updated LAPACK_LIBRARIES in ccmake / cmake-gui.
-    set( LAPACK_LIBRARIES ${LAPACK_LIBRARIES} CACHE STRING "Libraries for LAPACK and BLAS, to manually override search" FORCE )
+    set( LAPACK_LIBRARIES ${LAPACK_LIBRARIES} CACHE STRING
+         "Libraries for LAPACK and BLAS, to manually override search" FORCE )
 else()
     message( STATUS "User set LAPACK_LIBRARIES. To change, edit LAPACK_LIBRARIES using ccmake (set to empty to enable search)." )
     # Check either -lname syntax or file existence
@@ -448,9 +450,9 @@ include_directories( "${CMAKE_BINARY_DIR}/include" )
 include_directories( include )
 include_directories( control )
 if (MAGMA_ENABLE_CUDA)
-  include_directories( magmablas )  # e.g., shuffle.cuh
+    include_directories( magmablas )  # e.g., shuffle.cuh
 else()
-  include_directories( magmablas_hip )  # e.g., shuffle.cuh
+    include_directories( magmablas_hip )  # e.g., shuffle.cuh
 endif()
 
 # Need to check sizeof(void*) after setting flags above;
@@ -462,7 +464,8 @@ if (USE_FORTRAN)
 endif()
 
 # Configure config
-configure_file(${CMAKE_SOURCE_DIR}/include/magma_config.h.in  ${CMAKE_BINARY_DIR}/include/magma_config.h)
+configure_file( ${CMAKE_SOURCE_DIR}/include/magma_config.h.in
+                ${CMAKE_BINARY_DIR}/include/magma_config.h )
 
 # ----------------------------------------
 # compile MAGMA library
@@ -507,34 +510,32 @@ if (WIN32)
 else()
     # Unix doesn't seem to have a problem with mixing C, CUDA, and Fortran files
     if (MAGMA_ENABLE_CUDA)
-    #message(FATAL_ERROR "${libmagma_all}")
-      add_library( magma ${libmagma_all} )
-      target_link_libraries( magma
-        ${blas_fix}
-        ${LAPACK_LIBRARIES}
-        CUDA::cudart
-        CUDA::cublas
-        CUDA::cusparse
-        magma_nvcc_flags
-        )
+        #message( FATAL_ERROR "${libmagma_all}" )
+        add_library( magma ${libmagma_all} )
+        target_link_libraries( magma
+            ${blas_fix}
+            ${LAPACK_LIBRARIES}
+            CUDA::cudart
+            CUDA::cublas
+            CUDA::cusparse
+            magma_nvcc_flags )
     else()
-      find_package( hipBLAS )
-      if (hipBLAS_FOUND)
-        message( STATUS "Found rocBLAS ${rocBLAS_VERSION}" )
-      endif()
-      find_package( hipSPARSE )
-      if (hipSPARSE_FOUND)
-        message( STATUS "Found rocSPARSE ${rocSPARSE_VERSION}" )
-      endif()
-      add_library( magma ${libmagma_all} )
-      target_link_libraries( magma
-        hip::host
-        ${blas_fix}
-        ${LAPACK_LIBRARIES}
-        hip::device
-        roc::hipblas
-        roc::hipsparse
-        )
+        find_package( hipBLAS )
+        if (hipBLAS_FOUND)
+            message( STATUS "Found rocBLAS ${rocBLAS_VERSION}" )
+        endif()
+        find_package( hipSPARSE )
+        if (hipSPARSE_FOUND)
+            message( STATUS "Found rocSPARSE ${rocSPARSE_VERSION}" )
+        endif()
+        add_library( magma ${libmagma_all} )
+        target_link_libraries( magma
+            hip::host
+            ${blas_fix}
+            ${LAPACK_LIBRARIES}
+            hip::device
+            roc::hipblas
+            roc::hipsparse )
     endif()
 
     if (USE_FORTRAN)
@@ -593,36 +594,34 @@ target_link_libraries( tester
 
 # sparse doesn't have Fortran at the moment, so no need for above shenanigans
 if (MAGMA_ENABLE_CUDA)
-  include_directories( sparse/include )
-  include_directories( sparse/control )
+    include_directories( sparse/include )
+    include_directories( sparse/control )
 else()
-  include_directories( sparse_hip/include )
-  include_directories( sparse_hip/control )
+    include_directories( sparse_hip/include )
+    include_directories( sparse_hip/control )
 endif()
 include_directories( testing )
 
 if (MAGMA_ENABLE_CUDA)
-  add_library( magma_sparse ${libsparse_all} )
-  set_property(TARGET magma_sparse PROPERTY CUDA_STANDARD 14)
-  target_link_libraries( magma_sparse
-    magma
-    ${blas_fix}
-    ${LAPACK_LIBRARIES}
-    CUDA::cudart
-    CUDA::cublas
-    CUDA::cusparse
-    magma_nvcc_flags
-    )
+    add_library( magma_sparse ${libsparse_all} )
+    set_property( TARGET magma_sparse PROPERTY CUDA_STANDARD 14 )
+    target_link_libraries( magma_sparse
+        magma
+        ${blas_fix}
+        ${LAPACK_LIBRARIES}
+        CUDA::cudart
+        CUDA::cublas
+        CUDA::cusparse
+        magma_nvcc_flags )
 else()
-  add_library( magma_sparse ${libsparse_all} )
-  target_link_libraries( magma_sparse
-    magma
-    ${blas_fix}
-    ${LAPACK_LIBRARIES}
-    hip::device
-    roc::hipblas
-    roc::hipsparse
-    )
+    add_library( magma_sparse ${libsparse_all} )
+    target_link_libraries( magma_sparse
+        magma
+        ${blas_fix}
+        ${LAPACK_LIBRARIES}
+        hip::device
+        roc::hipblas
+        roc::hipsparse )
 endif()
 add_custom_target( sparse-lib DEPENDS magma_sparse )
 
@@ -657,9 +656,9 @@ add_custom_target( testing DEPENDS ${testing} )
 # compile each sparse tester
 
 if (MAGMA_ENABLE_CUDA)
-  set(SPARSE_TEST_DIR "sparse/testing")
+    set( SPARSE_TEST_DIR "sparse/testing" )
 else()
-  set(SPARSE_TEST_DIR "sparse_hip/testing")
+    set( SPARSE_TEST_DIR "sparse_hip/testing" )
 endif()
 
 
@@ -683,9 +682,9 @@ install( TARGETS magma magma_sparse ${blas_fix}
          LIBRARY DESTINATION lib
          ARCHIVE DESTINATION lib )
 if (MAGMA_ENABLE_CUDA)
-  file( GLOB headers include/*.h sparse/include/*.h "${CMAKE_BINARY_DIR}/include/*.h" )
+    file( GLOB headers include/*.h sparse/include/*.h "${CMAKE_BINARY_DIR}/include/*.h" )
 else()
-  file( GLOB headers include/*.h sparse_hip/include/*.h "${CMAKE_BINARY_DIR}/include/*.h" )
+    file( GLOB headers include/*.h sparse_hip/include/*.h "${CMAKE_BINARY_DIR}/include/*.h" )
 endif()
 if (USE_FORTRAN)
     install( FILES ${headers} ${modules}
@@ -696,9 +695,9 @@ endif()
 
 # ----------------------------------------
 # pkg-config
-get_target_property(MAGMA_INCLUDE magma INCLUDE_DIRECTORIES)
-foreach(dir ${MAGMA_INCLUDE})
-    string(APPEND INCLUDE_COMPILER_STRING "-I${dir} ")
+get_target_property( MAGMA_INCLUDE magma INCLUDE_DIRECTORIES )
+foreach (dir ${MAGMA_INCLUDE})
+    string( APPEND INCLUDE_COMPILER_STRING "-I${dir} " )
 endforeach()
 set( MAGMA_INCLUDE "${INCLUDE_COMPILER_STRING}" )
 set( pkgconfig lib/pkgconfig/magma.pc )
@@ -709,12 +708,12 @@ set( CXXFLAGS "${CMAKE_CXX_FLAGS}" )
 # CMake finds the Accelerate directory; we want -framework Accelerate for linking.
 string( REPLACE "/System/Library/Frameworks/Accelerate.framework" "-framework Accelerate" LAPACK_LIBS "${LAPACK_LIBRARIES}" )
 if (MAGMA_ENABLE_CUDA)
-  string( REPLACE ";" " " LIBS
-    "${blas_fix_lib} ${LAPACK_LIBS} -L${CUDAToolkit_LIBRARY_DIR} -lcudart -lcublas -lcusparse")
+    string( REPLACE ";" " " LIBS
+        "${blas_fix_lib} ${LAPACK_LIBS} -L${CUDAToolkit_LIBRARY_DIR} -lcudart -lcublas -lcusparse")
 else()
-  string( REPLACE ";" " " LIBS
-     "${blas_fix_lib} ${LAPACK_LIBS} ${HIP} ${rocBLAS} ${rocSPARSE}" )
-#    "${blas_fix_lib} ${LAPACK_LIBS} hip::device roc::hipblas roc::hipsparse" )
+    string( REPLACE ";" " " LIBS
+        "${blas_fix_lib} ${LAPACK_LIBS} ${HIP} ${rocBLAS} ${rocSPARSE}" )
+    # "${blas_fix_lib} ${LAPACK_LIBS} hip::device roc::hipblas roc::hipsparse" )
 endif()
 set( MAGMA_REQUIRED "" )
 configure_file( "${pkgconfig}.in" "${pkgconfig}" @ONLY )
@@ -729,9 +728,9 @@ message( STATUS "    CMAKE_INSTALL_PREFIX:  ${CMAKE_INSTALL_PREFIX}" )
 message( STATUS "    CFLAGS:                ${CMAKE_C_FLAGS}" )
 message( STATUS "    CXXFLAGS:              ${CMAKE_CXX_FLAGS}" )
 if (MAGMA_ENABLE_CUDA)
-  message( STATUS "    NVCCFLAGS:             ${CMAKE_CUDA_FLAGS}" )
+    message( STATUS "    NVCCFLAGS:             ${CMAKE_CUDA_FLAGS}" )
 else()
-  message( STATUS "    DEVCCFLAGS:            ${DEVCCFLAGS}" )
+    message( STATUS "    DEVCCFLAGS:            ${DEVCCFLAGS}" )
 endif()
 message( STATUS "    FFLAGS:                ${CMAKE_Fortran_FLAGS}" )
 message( STATUS "    LIBS:                  ${LIBS}" )
@@ -739,12 +738,12 @@ message( STATUS "    blas_fix:              ${blas_fix}  (MacOS Accelerate only)
 message( STATUS "    LAPACK_LIBRARIES:      ${LAPACK_LIBRARIES}"      )
 message( STATUS "    INCLUDE_DIRECTORIES:   ${MAGMA_INCLUDE}"   )
 if (MAGMA_ENABLE_CUDA)
-  message( STATUS "    CUDA_CUDART_LIBRARY:   CUDA::cudart"   )
-  message( STATUS "    CUDA_CUBLAS_LIBRARIES: CUDA::cublas" )
-  message( STATUS "    CUDA_cusparse_LIBRARY: CUDA::cusparse" )
+    message( STATUS "    CUDA_CUDART_LIBRARY:   CUDA::cudart"   )
+    message( STATUS "    CUDA_CUBLAS_LIBRARIES: CUDA::cublas" )
+    message( STATUS "    CUDA_cusparse_LIBRARY: CUDA::cusparse" )
 else()
-  message( STATUS "    HIP_LIBRARY:   hip::device"   )
-  message( STATUS "    HIP_BLAS_LIBRARIES: roc::hipblas" )
-  message( STATUS "    HIP_sparse_LIBRARY: roc::hipsparse" )
+    message( STATUS "    HIP_LIBRARY:   hip::device"   )
+    message( STATUS "    HIP_BLAS_LIBRARIES: roc::hipblas" )
+    message( STATUS "    HIP_sparse_LIBRARY: roc::hipsparse" )
 endif()
 message( STATUS "    Fortran modules:       ${modules}" )
