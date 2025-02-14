@@ -376,10 +376,20 @@ set( CMAKE_LIBRARY_OUTPUT_DIRECTORY lib )
 # ----------------------------------------
 # list of sources
 if (MAGMA_ENABLE_CUDA)
-  include( ${CMAKE_SOURCE_DIR}/CMake.src.cuda )
+    include( ${CMAKE_SOURCE_DIR}/CMake.src.cuda )
 else()
-  include( ${CMAKE_SOURCE_DIR}/CMake.src.hip )
+    include( ${CMAKE_SOURCE_DIR}/CMake.src.hip )
 endif()
+
+include( cmake/Generator.cmake )
+generate_files( libmagma_all        )
+generate_files( libblas_fix_src     )
+generate_files( libtest_all         )
+generate_files( liblapacktest_all   )
+generate_files( testing_all         )
+generate_files( libsparse_all       )
+generate_files( sparse_testing_all  )
+generate_files( header_templates    )
 
 # ----------------------------------------
 # common flags

@@ -45,6 +45,9 @@ $(CMAKESRC): Makefile.gen.$(BACKEND)
 	echo                                               >> $@
 	echo "set( sparse_testing_all"                     >> $@
 	echo    "$(sparse_testing_all) )"    | $(newlines) >> $@
+	echo                                               >> $@
+	echo "set( header_templates"                       >> $@
+	echo    "$(header_templates) )"      | $(newlines) >> $@
 
 # cleanall (defined in Makefile) also deletes Makefile.gen/src
 cleanall: cleanmake
