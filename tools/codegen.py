@@ -111,7 +111,7 @@ if opts.verbose:
 
 # ------------------------------------------------------------
 # load substitution tables
-from magmasubs import subs
+from subs import subs
 
 # Fill in subs_search with same structure as subs, but containing None values.
 # Later in substitute(), we'll cache compiled regexps in subs_search.
