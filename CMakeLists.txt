@@ -11,6 +11,13 @@ else()
     project( MAGMA C CXX )
 endif()
 
+include( FindPython )  # requires CMake 3.12
+if (Python_FOUND)
+    message( STATUS "Found Python interpreter wth ID ${Python_INTERPRETER_ID} and EXE ${Python_EXECUTABLE}" )
+else()
+    message( FATAL_ERROR "Couldn't find Python interpreter, cannot generate all precision files." )
+endif()
+
 # ----------------------------------------
 # MAGMA requires one backend to be enabled
 option( MAGMA_ENABLE_CUDA     "Enable the CUDA backend"  OFF )
@@ -383,6 +390,12 @@ else()
     include( ${CMAKE_SOURCE_DIR}/CMake.src.hip )
 endif()
 
+if (${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.31.0)
+    cmake_policy( SET CMP0171 NEW ) # recognize CMake's `codegen` target
+    set( CODEGEN "CODEGEN" )
+endif()
+
+# Generate source for all data types.
 include( cmake/Generator.cmake )
 generate_files( libmagma_src        )
 generate_files( libtest_src         )
